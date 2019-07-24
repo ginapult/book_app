@@ -1,0 +1,6 @@
+.title-bar {
+  background-color: darkslategrey;
+  color: white;
+  display: flex;
+  align-content: center;
+}
