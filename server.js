@@ -80,7 +80,7 @@ function addBook(request, response) {
 
 //Note that .ejs file extension is not required
 function newSearch(request, response) {
-  response.render('pages/index')
+  response.render('../views/pages/index')
 }
 
 //Note that no API required
