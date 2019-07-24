@@ -8,9 +8,6 @@ const pg = require('pg');
 //Environment variables
 require('dotenv').config();
 
-//Cache time-out
-const timeout = { book: 7 * 1000 * 60 * 60 * 24 }
-
 //Application setup
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,10 +24,13 @@ app.set('view engine', 'ejs');
 //API Routes
 //Renders the search form
 app.get('/', newSearch);
-app.get('')
 
 //Creates a new search to the Google Books API (Handler)
 app.post('/searches', createSearch);
+
+app.get('/books/:book_id', getOneBook);
+app.post('/book', addBook);
+app.get('/add', showForm);
 
 //Catch-all
 app.get('*', (request, response) => response.status(404).send('404 Error: This route does not exist.'));
@@ -50,29 +50,37 @@ function Book(info) {
   this.description = info.description ? info.description : 'No description available.';
   this.id = info.industryIdentifiers ? `${info.industryIdentifiers[0].identifier}` : '';
 }
+Book.lookup = lookup;
 
-//Note that .ejs file extension is not required
-function newSearch(request, response) {response.render('pages/index')}
+function getOneBook(request, response) {
+  let SQL = 'SELECT * FROM books WHERE id=$1;';
+  let values = [request.params.book_id];
 
-//Look for existing results in the Database book_app
-function lookup(book) {
-  const SQL = `Select * FROM ${book.books} WHERE id=$1;`;
-
-  client.query(SQL)
+  return client.query(SQL, values)
     .then(result => {
-      if (result.rowCount > 0) {
-        book.cacheHit(result);
-      } else {
-        book.cacheMiss();
-      }
+      return response.render('pages/books/detail', { book: result.rows[0]});
     })
-    .catch(error => handleError(error));
+    .catch(error => handleError(error, response));
 }
 
-//Clear the results for a book if they are stale
-function deleteBookById(table, book) {
-  const SQL = `DELETE FROM ${books} WHERE id=${book};`;
-  return client.query(SQL);
+function showForm(request, response) {
+  response.render('pages/books/show'); //Need to confirm whether under books or searches
+}
+
+function addBook(request, response) {
+  let {author, title, isbn, image_url, description, bookshelf} = request.body;
+
+  let SQL = 'INSERT INTO books(author, title, isbn, image_url, description, bookshelf) VALUES ($1, $2, $3, $4, $5, $6);';
+  let values = [author, title, isbn, image_url, description, bookshelf];
+
+  return client.query(SQL, values)
+    .then(response.redirect('/'))
+    .catch(error => handleError(error, response));
+}
+
+//Note that .ejs file extension is not required
+function newSearch(request, response) {
+  response.render('pages/index')
 }
 
 //Note that no API required
@@ -95,5 +103,5 @@ function createSearch(request, response) {
 
 //Handle errors
 function handleError(error, response) {
-  response.render('pages/error', { error: error });
+  response.render('pages/error', { error: 'Oops.' });
 }
