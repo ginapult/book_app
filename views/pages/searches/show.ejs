@@ -1,0 +1,8 @@
+<h1>Hello</h1>
+
+<% searchResults.forEach(book => { %>
+  <img src ="<%= book.image %>" alt="<%= book.title %> book cover image">
+  <h2>Title: <%= book.title %></h2>
+  <h3>Authors: <%= book.authors %></h3>
+  <p>Description: <%= book.description %></p>
+<% }); %>

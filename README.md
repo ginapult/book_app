@@ -25,7 +25,7 @@ Number and name of feature 1: Saved books displayed
 
 Estimate of time needed to complete: 25 mins
 
-Start time: _____
+Start time: __10AM___
 
 Finish time: _____
 
