@@ -3,10 +3,19 @@
 //Application dependencies
 const express = require('express');
 const superagent = require('superagent');
+const pg = require('pg');
+
+//Environment variables
+require('dotenv').config();
+
+//Cache time-out
+const timeout = { book: 7 * 1000 * 60 * 60 * 24 }
 
 //Application setup
 const app = express();
 const PORT = process.env.PORT || 3000;
+const client = new pg.Client(process.env.DATABASE_URL);
+client.connect();
 
 //Application middleware
 app.use(express.urlencoded({ extended: true }));
@@ -18,6 +27,7 @@ app.set('view engine', 'ejs');
 //API Routes
 //Renders the search form
 app.get('/', newSearch);
+app.get('')
 
 //Creates a new search to the Google Books API (Handler)
 app.post('/searches', createSearch);
@@ -43,6 +53,27 @@ function Book(info) {
 
 //Note that .ejs file extension is not required
 function newSearch(request, response) {response.render('pages/index')}
+
+//Look for existing results in the Database book_app
+function lookup(book) {
+  const SQL = `Select * FROM ${book.books} WHERE id=$1;`;
+
+  client.query(SQL)
+    .then(result => {
+      if (result.rowCount > 0) {
+        book.cacheHit(result);
+      } else {
+        book.cacheMiss();
+      }
+    })
+    .catch(error => handleError(error));
+}
+
+//Clear the results for a book if they are stale
+function deleteBookById(table, book) {
+  const SQL = `DELETE FROM ${books} WHERE id=${book};`;
+  return client.query(SQL);
+}
 
 //Note that no API required
 

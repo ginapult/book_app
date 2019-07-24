@@ -9,3 +9,6 @@ CREATE TABLE books(
   description VARCHAR (255),
   bookshelf VARCHAR (255)
 );
+
+INSERT INTO books (author, title, isbn, image_url, description, bookshelf)
+VALUES('Sarah Gina','WE ARE AWESOME','9283972891','https://learn.dojouniversity.com/wp-content/uploads/2017/11/do-i-hear-a-woot-woot.jpg','Woot woot woot.','Things we do at school');
