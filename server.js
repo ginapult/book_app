@@ -46,7 +46,6 @@ function Book(info) {
   this.description = info.description ? info.description : 'No description available.';
   this.id = info.industryIdentifiers ? `${info.industryIdentifiers[0].identifier}` : '';
 }
-Book.lookup = lookup;
 
 function getBooks(request, response) {
   let SQL = 'SELECT * FROM books;';
