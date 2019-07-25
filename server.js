@@ -5,14 +5,14 @@ const express = require('express');
 const superagent = require('superagent');
 const pg = require('pg');
 
-//Environment variables
-require('dotenv').config();
-
 //Application setup
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+//Database setup
 const client = new pg.Client(process.env.DATABASE_URL);
 client.connect();
+client.on('error', err => console.error(err));
 
 //Application middleware
 app.use(express.urlencoded({ extended: true }));
@@ -22,15 +22,11 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 //API Routes
-//Renders the search form
-app.get('/', newSearch);
-
-//Creates a new search to the Google Books API (Handler)
+app.get('/', getBooks);
 app.post('/searches', createSearch);
-
-app.get('/books/:book_id', getOneBook);
-app.post('/book', addBook);
-app.get('/add', showForm);
+app.get('/searches/new', newSearch);
+app.post('/books', createBook);
+app.get('/books/:id', getBook);
 
 //Catch-all
 app.get('*', (request, response) => response.status(404).send('404 Error: This route does not exist.'));
@@ -52,45 +48,22 @@ function Book(info) {
 }
 Book.lookup = lookup;
 
-function getOneBook(request, response) {
-  let SQL = 'SELECT * FROM books WHERE id=$1;';
-  let values = [request.params.book_id];
+function getBooks(request, response) {
+  let SQL = 'SELECT * FROM books;';
 
-  return client.query(SQL, values)
-    .then(result => {
-      return response.render('pages/books/detail', { book: result.rows[0]});
+  return client.query(SQL)
+    .then(results => {
+      if (results.rows.rowCount === 0) {
+        response.render('pages/searches/new');
+      } else {
+        response.render('pages/index', { books: results.rows })
+      }
     })
-    .catch(error => handleError(error, response));
+    .catch(err => handleError(err, response));
 }
 
-function showForm(request, response) {
-  response.render('pages/books/show'); //Need to confirm whether under books or searches
-}
-
-function addBook(request, response) {
-  let {author, title, isbn, image_url, description, bookshelf} = request.body;
-
-  let SQL = 'INSERT INTO books(author, title, isbn, image_url, description, bookshelf) VALUES ($1, $2, $3, $4, $5, $6);';
-  let values = [author, title, isbn, image_url, description, bookshelf];
-
-  return client.query(SQL, values)
-    .then(response.redirect('/'))
-    .catch(error => handleError(error, response));
-}
-
-//Note that .ejs file extension is not required
-function newSearch(request, response) {
-  response.render('../views/pages/index')
-}
-
-//Note that no API required
-
-//Console.log request.body and request.body.search
 function createSearch(request, response) {
   let url = 'https://www.googleapis.com/books/v1/volumes?q=';
-
-  console.log(request.body);
-  console.log(request.body.search);
 
   if (request.body.search[1] === 'title') { url += `+intitle:${request.body.search[0]}`; }
   if (request.body.search[1] === 'author') { url += `+inauthor:${request.body.search[0]}`; }
@@ -99,6 +72,46 @@ function createSearch(request, response) {
     .then(apiResponse => apiResponse.body.items.map(bookResult => new Book(bookResult.volumeInfo)))
     .then(results => response.render('pages/searches/show', { searchResults: results }))
     .catch(err => handleError(err, response));
+}
+
+//Note that .ejs file extension is not required
+function newSearch(request, response) {
+  response.render('pages/searches/new')
+}
+
+function createBook(request, response) {
+  let normalizedShelf = request.body.bookshelf.toLowerCase();
+
+  let { title, author, isbn, image_url, description } = request.body;
+  let SQL = 'INSERT INTO books(title, author, isbn, image_url, description, bookshelf) VALUES($1, $2, $3, $4, $5, $6);';
+  let values = [title, author, isbn, image_url, description, normalizedShelf];
+
+  return client.query(SQL, values)
+    .then(() => {
+      SQL = 'SELECT * FROM books WHERE isbn=$1;';
+      values = [request.body.isbn];
+      return client.query(SQL, values)
+        .then(result => response.redirect(`/books/${result.rows[0].id}`))
+        .catch(handleError);
+    })
+    .catch(err => handleError(err, response));
+}
+
+function getBook(request, response) {
+  getBookshelves()
+    .then(shelves => {
+      let SQL = 'SELECT * FROM books WHERE id=$1;';
+      let values = [request.params.book_id];
+      client.query(SQL, values)
+        .then(result => response.render('pages/books/show', { book:result.rows[0], bookshelves: shelves.rows }))
+        .catch(err => handleError(err, response));
+    })
+}
+
+function getBookshelves() {
+  let SQL = 'SELECT DISTINCT bookshelf FROM books ORDER BY bookshelf;';
+
+  return client.query(SQL);
 }
 
 //Handle errors
