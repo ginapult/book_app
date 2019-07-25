@@ -5,6 +5,8 @@ const express = require('express');
 const superagent = require('superagent');
 const pg = require('pg');
 
+require('dotenv').config();
+
 //Application setup
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,7 +48,6 @@ function Book(info) {
   this.description = info.description ? info.description : 'No description available.';
   this.id = info.industryIdentifiers ? `${info.industryIdentifiers[0].identifier}` : '';
 }
-Book.lookup = lookup;
 
 function getBooks(request, response) {
   let SQL = 'SELECT * FROM books;';
