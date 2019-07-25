@@ -2,81 +2,32 @@
 <html lang="en">
   
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="/styles/reset.css">
-  <link rel="stylesheet" href="/styles/base.css">
-  <link rel="stylesheet" href="/styles/icons.css">
-  <link rel="stylesheet" href="/styles/layout.css">
-  <link rel="stylesheet" href="/styles/modules.css">
-  <title>Our Awesome Book App</title>
+  <%- include('../layout/head') %>
 </head>
 
 <body>
 
   <!-- Header -->
-  <header>
-      <a href="/"><h1>Book App</h1></a>
-
-      <nav>
-          <div class="icon-menu"></div>
-          <ul>
-            <li><a href="/">Home</a></li>
-          </ul>
-      </nav>
-  </header>
+  <%- include('../layout/header') %>
   
   <!-- Main -->
   <main>
 
-    <!-- Title bar -->
-    <section class="title-bar"><h4>Search by title or author</h4></section>
+    <h4>Saved Books</h4>
+    <p><%= books.length %> books in the Collection</p>
+    <ul id="book-list">
+      <% books.forEach(book => { %>
+        <li class="book-items" data-book-id="<%= book.id %>">
+          <%- include('books/detail', {book: book}) %>
+          <p class="detail-button"><a href="/books/<%= book.id %>">View Details</a></p>
+        </li>
+      <% }) %>
+    </ul>
 
-    <div class="wrapper">
-      
-    <!-- Form input -->
-    <section class="form-input">
-    <form action="/searches" method="post">
-      <input type="text" name="search" placeholder="Enter a title or author" required>
-    </section>
+  </main>
 
-      <!-- Title radio -->
-      <section class="title-radio">
-      <fieldset>
-        <label for="title">
-          <span>Title</span>
-          <input type="radio" name="search" value="title" required>
-        </label>
-      </fieldset>
-      </section>
-
-      <!-- Author radio -->
-      <section class="author-radio">
-      <fieldset>
-        <label for="author">
-          <span>Author</span>
-          <input type="radio" name="search" value="author" required>
-        </label>
-      </fieldset>
-      </section>
-
-      <!-- Search button -->
-      <section class="submit-button"><button type="submit">Search the Google Books API</button></section>
-
-  </form>
-  </div>
-</main>
-
-<!-- Footer -->
-<footer>
-  <ul>
-    <li><span class="icon-mail2"><a href=""></a></span></li>
-    <li><span class="icon-twitter"><a href=""></a></span></li>
-    <li><span class="icon-github"><a href=""></a></span></li>
-    <li><span class="icon-linkedin2"><a href=""></a></span></li>
-  </ul>
-</footer>
+  <!-- Footer -->
+  <%- include('../layout/footer') %>
 
 </body>
 </html>
