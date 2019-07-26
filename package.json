@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/ginapult/book_app#readme",
   "dependencies": {
+    "dotenv": "^8.0.0",
     "ejs": "^2.6.2",
     "express": "^4.17.1",
     "pg": "^7.11.0",
