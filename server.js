@@ -24,6 +24,7 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 //API Routes
+
 app.get('/', getBooks);
 app.post('/searches', createSearch);
 app.get('/searches/new', newSearch);
@@ -104,7 +105,7 @@ function getBook(request, response) {
       let SQL = 'SELECT * FROM books WHERE id=$1;';
       let values = [request.params.book_id];
       client.query(SQL, values)
-        .then(result => response.render('pages/books/show', { book:result.rows[0], bookshelves: shelves.rows }))
+        .then(result => response.render('pages/books/show', { book:result.rows[0], bookshelves:shelves.rows }))
         .catch(err => handleError(err, response));
     })
 }
